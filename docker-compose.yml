@@ -1,0 +1,21 @@
+version: "3.3"
+services:
+  app:
+    build: ./app
+    links:
+      - db
+    ports:
+      - "5000:3000"
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+      MYSQL_INSTANCE_NAME: devops
+      MYSQL_PORT_3306_TCP_ADDR: db
+      MYSQL_PORT_3306_TCP_PORT: "3306"
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "5001:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
