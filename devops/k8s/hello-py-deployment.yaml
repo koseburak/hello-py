@@ -1,0 +1,99 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: hello-py-pv-volume
+  namespace: default
+  labels:
+    type: local
+    app: hello-py
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/mnt/kube-data/hello-py"
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: hello-py-pv-claim
+  namespace: default
+  labels:
+    app: hello-py
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-py
+  namespace: default
+  labels:
+    app: hello-py
+spec:
+  type: NodePort
+  ports:
+   - port: 30100
+     protocol: TCP
+     targetPort: 3000
+     nodePort: 30100
+     name: port-hello-py
+  selector:
+   app: hello-py
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hello-py
+  namespace: default
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hello-py
+    spec:
+      containers:
+        - name: hello-py
+          image: 127.0.0.1:30001/hello-py
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 3000
+              name: port-hello-py
+          env:
+          - name: MYSQL_USERNAME
+            value: "root"
+          - name: MYSQL_PASSWORD
+            value: "root"
+          - name: MYSQL_INSTANCE_NAME
+            value: "devops"
+          - name: MYSQL_PORT_3306_TCP_ADDR
+            value: "127.0.0.1"
+          - name: MYSQL_PORT_3306_TCP_PORT
+            value: "3306"
+        - name: mysql
+          image: mysql:5.7
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "root"
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: hello-py-vol
+      volumes:
+        - name: hello-py-vol
+          persistentVolumeClaim:
+            claimName: hello-py-pv-claim
