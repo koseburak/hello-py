@@ -65,7 +65,7 @@ spec:
     spec:
       containers:
         - name: hello-py
-          image: 127.0.0.1:30001/hello-py
+          image: 127.0.0.1:30001/hello-py:0.0.1
           imagePullPolicy: "IfNotPresent"
           ports:
             - containerPort: 3000
