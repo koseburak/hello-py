@@ -1,6 +1,6 @@
-# Python development example using the Docker and Kubernetes
+# Python development example using Docker and Kubernetes
 
-This project is an example of python application development in a cluster of kubernetes created using vagrant and ansible in a local development environment.
+This project is an example of python application development in a Kubernetes cluster which is created using vagrant and ansible in a local development environment.
 
 ## Installation
   * [Docker](https://docs.docker.com/install/) - for install Docker Desktop
@@ -21,47 +21,53 @@ Run this command to install local environment in the same directory as Vagrantfi
 $ vagrant up
 ```
 
-Copy the kube config file inside the .kube/ directory of under your local user directory after the above command completed the successfully. ( You need this for manage your k8s cluster from the client side )
+Copy created "config" file into the "$HOME/.kube/" folder to manage provisioned K8s cluster
  ```sh
-$ cp ../devops/ansible-playbooks/config ~/.kube/config
+$ cp devops/ansible-playbooks/config ~/.kube/config
 ```
 
 ## Development and Deployment
 
 ### 1. Development
-1.1. Develop the new changes on your application in your local repository
+1.1. Make changes on your python application in local repository.
 
 ### 2. Build docker image
-2.1. Build the new docker image of application after the completed the development. ( run this command  in the same directory as Dockerfile )
+Run this command to define the private docker registry address as a env variable on your local environment
  ```sh
-$ docker build -t 192.168.50.10:30001/hello-py:0.0.1 .
+$ export $REGISTRY="192.168.50.10:30001"
 ```
 
-2.2. Push the new docker image of your application to private docker registry running on the local k8s cluster.
+2.1. Build new docker image for the developed code of application  ( run this command  in the same directory as Dockerfile )
  ```sh
-$ docker push 192.168.50.10:30001/hello-py:0.0.1
+$ docker build -t $REGISTRY/hello-py:0.0.1 .
+```
+
+2.2. Push the new docker image of your application to private docker registry running on the local k8s cluster
+ ```sh
+$ docker push $REGISTRY/hello-py:0.0.1
 ```
 
 ### 3. Deployment
-Deploy the new version of application to k8s cluster running on your local environment.
+Deploy the new version of application to K8s cluster.
 
-3.1. If you are deploying your application the first time run this command;
+3.1. If you are deploying your application for the first time, run this command
 ```sh
-$ kubectl apply -f ../devops/k8s/hello-py-deployment.yaml
+$ kubectl apply -f devops/k8s/hello-py-deployment.yaml
 ```
 
-3.2. If you want to re-deploy your application after the completed your new changes on your application run this command; ( you have to run the again 2. steps with the new  version tag before the run this command  )
+3.2. After each new development you make, you have to create a new docker image with new version tag ( by running commands in the 2.step ) and update the K8s deployment file in a way that it uses the new docker image with the following command
 ```sh
 $ kubectl set image deployment/hello-py hello-py=127.0.0.1:30001/hello-py:0.0.2
 ```
-3.3. Check the status of your deployment and pods is ready.
+
+3.3. Check of your deployment and pods if they are is ready
  ```sh
 $ kubectl get deploy -n default
-```
- ```sh
+
 $ kubectl get pods -n default
 ```
-3.4. Now, try to access your application via the browser using the address below.
+
+3.4. Now, try to access your application via the browser using the address below
  ```sh
 http://192.168.50.10:30100/
 ```

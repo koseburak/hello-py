@@ -27,7 +27,8 @@ share/python-wheels/
 *.egg
 MANIFEST
 .vagrant
-
+devops/ansible-playbooks/config
+devops/ansible-playbooks/join-command
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
